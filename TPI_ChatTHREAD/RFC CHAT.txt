@@ -1,0 +1,115 @@
+*Jacopo Mattia Marconi*
+*Versione Chat 1.0.20*
+*27/10/2020*			
+
+				THE CHAT PROTOCOL
+
+STUTTURA DI BASE DEI PACCHETTI
+	____________________
+	|OPCODE|LENGTH|DATI|
+	
+	OPCODE: 1 Byte
+	LENGTH: 2 Byte
+	DATI: n Byte (0 -> 65535)
+	
+	LUNGHEZZA MINIMA PACCHETTO: 3 Byte
+	LUNGHEZZA MASSIMA PACCHETTO: 65538 Byte
+
+
+STATI DELLA CHAT
+	1. LOGIN
+	2. RISPOSTE SERVER
+		2.1 OK
+		2.2 ERROR
+	3. LOGOUT
+	4. INFO
+	5. LISTA UTENTI
+	6. TEXT PUBBLICO
+	7. TEXT PRIVATO
+
+1. LOGIN
+	L'utente, per prima cosa, deve accedere.
+	Permessi lettere, numeri, caratteri speciali.
+	User lunghezza minima: 6 caratteri
+	User lunghezza massima: 15 caratteri
+					  __________________
+	PACCHETTO LOGIN, invato al server: |11|LENGTH|"NAME"|
+					  
+	Il server risponderà al client con un messaggio di "OK" o "ERR"
+
+
+2. RISPOSTE SERVER
+	Il server, per ogni azione svolta, invierà al mittente un messaggio
+	di: "OK", quando il pacchetto viene inviato al destinatario o il login 
+	o il logout è avvenuto con successo; "ERR", quando il pacchetto inviato
+	non ha trovato il destinatario o il login o il logout non è avvenuto con
+	successo
+					______
+	PACCHETTO OK inviato al client: |0|00|
+					 ________________________
+	PACCHETTO ERR inviato al client: |1|LEN|"TIPO DI ERRORE"|
+
+	Il tipo di errore potrà essere: "USER NON VALIDO", "USER DUPLICATO"
+
+
+3. LOGOUT
+	L'utente, per uscire dalla chat, dovrà inviare al server la richiesta di 
+	logout. Il client riceverà il pacchetto "OK" di risposta dal server (VEDI
+	PUNTO "2. RISPOSTE SERVER").
+					    _______
+	PACCHETTO LOGOUT inviato al server: |12|00|
+
+
+4. INFO
+	L'utente, una volta acceduto, potrà richiedere al server una INFO.
+	L'INFO verrà inviato dal server al pacchetto.
+	L'INFO conterrà "DAYTIME, VERSIONE"
+					      _______
+	PACCHETTO INFO, richiesto dal client: |40|00|
+					    ___________________________
+	PACCHETTO INFO, inviato dal server: |41|LEN|"DAYTIME,VERSIONE"|
+
+
+5. LISTA UTENTI
+	L'utente può richiedere al server la lista degli utenti attivi.
+	Il server si preoccuperà, appena avvenuto con succcesso il login di un
+	utente, ad inserirlo in una lista. Il server dovrà tenere aggiornata
+	la lista quando un utente cambierà username o farà logout.
+						      _______
+	PACCHETTO LISTA UTENTI, richiesto dal client: |42|00|
+						    ________________________
+	PACCHETTO LISTA UTENTI, inviato dal server: |43|LEN|UTENTE|0|UTENTE|
+	
+	Il server invierà periodicamente la lista utenti al client o ogni qual
+	volta che venga aggiornata.
+
+
+6. TEXT PUBBLICO
+	L'utente può inviare un messaggio in broadcast a tutti gli utenti. Il pacchetto
+	inviato dal mittente raggiungerà il server.
+	Il server, ricevuto il messaggio dal mittente lo invierà a tutti gli
+	utenti attivi, compreso il mittente.
+				                       _______________________
+	PACCHETTO TEXT PUBBLICO, inviato dal mittente: |20|LENGTH|"MESSAGGIO"|
+						       __________________________________
+	PACCHETTO TEXT PUBBLICO, inoltrato dal server: |21|LENGTH|MITTENTE|0|"MESSAGGIO"|
+
+
+7. TEXT PRIVATO
+	L'utente può inviare un messaggio ad un destinatario ben preciso, specificando il
+	destinatario. Il server, una volta ricevuto il pacchetto dal mittente, lo inoltrerà 
+	al destinatario. Se il destinatario è un utente ancora attivo, il server 
+	manderà al mittente un pacchetto di conferma "OK" (vedi punto 2. RISPOSTE SERVER), 
+	al contrario, se il destinatario non è più attivo o non è raggiungibile, il server
+	manderà al mittente un pacchetto di errore "ERR".
+						      ______________________________________
+	PACCHETTO TEXT PRIVATO, inviato dal mittente: |22|LENGTH|DESTINATARIO|0|"MESSAGGIO"|
+						      __________________________________
+	PACCHETTO TEXT PRIVATO, inoltrato dal server: |23|LENGTH|MITTENTE|0|"MESSAGGIO"|	
+
+
+PROTOCOLLO PRIVACY FILE LOG
+	Nel frattempo dell'esecuzione della chat verranno prese info sulle azioni degli
+	utenti attivi, i messaggi, però, non verranno salvati in alcun modo per
+	salvaguardare la privacy e la sicurezza degli utenti stessi.
+	
